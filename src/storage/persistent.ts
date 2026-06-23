@@ -1,10 +1,17 @@
 import { createRequire } from "node:module";
 
 export interface DomainRedis {
-  set(key: string, value: string, expiryMode: string, seconds: number): Promise<unknown>;
+  set(key: string, value: string, expiryMode?: string, seconds?: number): Promise<unknown>;
   get(key: string): Promise<string | null>;
   del(key: string): Promise<unknown>;
   sadd(key: string, ...members: string[]): Promise<number>;
+  srem(key: string, ...members: string[]): Promise<number>;
+  scard(key: string): Promise<number>;
+  lpush(key: string, ...values: string[]): Promise<number>;
+  rpop(key: string): Promise<string | null>;
+  zadd(key: string, score: number, member: string): Promise<number>;
+  zrem(key: string, ...members: string[]): Promise<number>;
+  zrangebyscore(key: string, min: number, max: number): Promise<string[]>;
 }
 
 let _client: DomainRedis | null | undefined = undefined;

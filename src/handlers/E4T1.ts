@@ -1,37 +1,8 @@
 import { Composer } from "grammy";
 import type { Ctx } from "../bot.js";
 import { getRedisClient } from "../storage/persistent.js";
-import { createRequire } from "node:module";
 
-interface MatchmakingRedis {
-  lpush(key: string, ...values: string[]): Promise<number>;
-  rpop(key: string): Promise<string | null>;
-  set(key: string, value: string): Promise<unknown>;
-  del(key: string): Promise<unknown>;
-  sadd(key: string, ...members: string[]): Promise<number>;
-  srem(key: string, ...members: string[]): Promise<number>;
-  scard(key: string): Promise<number>;
-}
-
-function getMatchmakingClient(): MatchmakingRedis | null {
-  const url = process.env.REDIS_URL;
-  if (!url) return null;
-
-  try {
-    const require = createRequire(import.meta.url);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ioredis: any = require("ioredis");
-    const Redis = ioredis.default ?? ioredis.Redis ?? ioredis;
-    return new Redis(url, {
-      maxRetriesPerRequest: null,
-      lazyConnect: false,
-    }) as MatchmakingRedis;
-  } catch {
-    return null;
-  }
-}
-
-const redis = getMatchmakingClient();
+const redis = getRedisClient();
 
 const composer = new Composer<Ctx>();
 

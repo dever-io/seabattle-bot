@@ -1,32 +1,8 @@
 import { Composer } from "grammy";
 import type { Ctx } from "../bot.js";
-import { createRequire } from "node:module";
+import { getRedisClient } from "../storage/persistent.js";
 
-interface RatingQueueRedis {
-  zadd(key: string, score: number, member: string): Promise<number>;
-  zrem(key: string, ...members: string[]): Promise<number>;
-  zrangebyscore(key: string, min: number, max: number): Promise<string[]>;
-}
-
-function getRatingQueueClient(): RatingQueueRedis | null {
-  const url = process.env.REDIS_URL;
-  if (!url) return null;
-
-  try {
-    const require = createRequire(import.meta.url);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const ioredis: any = require("ioredis");
-    const Redis = ioredis.default ?? ioredis.Redis ?? ioredis;
-    return new Redis(url, {
-      maxRetriesPerRequest: null,
-      lazyConnect: false,
-    }) as RatingQueueRedis;
-  } catch {
-    return null;
-  }
-}
-
-const redis = getRatingQueueClient();
+const redis = getRedisClient();
 
 const composer = new Composer<Ctx>();
 
