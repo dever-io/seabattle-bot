@@ -1,0 +1,109 @@
+[
+  {
+    "name": "/newmatch creates a match in waiting state with correct fields",
+    "steps": [
+      {
+        "send": { "text": "/newmatch 42" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Match #1 created.\nState: waiting\nPlayer A: Test (1)\nPlayer B: unknown (42)\nTurn: none"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/mymatch shows no active matches when none exist",
+    "steps": [
+      {
+        "send": { "text": "/mymatch" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "You have no active matches."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "create match then query it with /mymatch",
+    "steps": [
+      {
+        "send": { "text": "/newmatch 42" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Match #1 created.\nState: waiting\nPlayer A: Test (1)\nPlayer B: unknown (42)\nTurn: none"
+            }
+          }
+        ]
+      },
+      {
+        "send": { "text": "/mymatch" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Match #1\nState: waiting\nPlayer A: 1\nPlayer B: 42\nTurn: none"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/newmatch with missing ID shows usage",
+    "steps": [
+      {
+        "send": { "text": "/newmatch" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Usage: /newmatch <telegram_id>"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/newmatch with invalid ID shows error",
+    "steps": [
+      {
+        "send": { "text": "/newmatch abc" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Please provide a valid numeric Telegram ID."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/newmatch cannot challenge self",
+    "steps": [
+      {
+        "send": { "text": "/newmatch 1" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "You cannot challenge yourself."
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
