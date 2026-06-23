@@ -195,6 +195,13 @@ async function updateBothMessages(
 const composer = new Composer<Ctx>();
 
 composer.command("place_ships", async (ctx) => {
+  if (getPlacement(ctx)) {
+    await ctx.reply(
+      "You already have an active ship placement session. Continue using the grid and controls above, or tap Reset to start over.",
+    );
+    return;
+  }
+
   const remainingShips = SHIPS.map((s) => s.name);
   const state: PlacementState = {
     selectedShip: remainingShips[0],
