@@ -8,6 +8,7 @@ composer.command("welcome", async (ctx) => {
   await ctx.reply("Welcome! I am ready to help.", {
     reply_markup: menuKeyboard([
       { text: "Help", data: "menu:help" },
+      { text: "Leaderboard", data: "leaderboard:view" },
       { text: "Status", data: "menu:status" },
     ]),
   });
