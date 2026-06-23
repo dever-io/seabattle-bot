@@ -5,7 +5,7 @@
       {
         "send": { "text": "/help" },
         "expect": [
-          { "method": "sendMessage", "payload": { "text": "Available commands:\n/help\n/ping\n/start" } }
+          { "method": "sendMessage", "payload": { "text": "Available commands:\n/attack\n/auto_ships\n/checkinvite\n/createinvite\n/endgame\n/fire\n/help\n/history\n/invite\n/myboard\n/mymatch\n/newmatch\n/ping\n/place_ships\n/placeship\n/profile\n/quickmatch\n/register\n/rmatch\n/start\n/turnt" } }
         ]
       }
     ]
