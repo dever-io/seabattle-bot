@@ -240,17 +240,17 @@ function buildGridDisplayText(grid: number[][]): string {
   return rows.join("\n");
 }
 
-async function savePlacement(ctx: Ctx, ships: PlacedShip[]): Promise<void> {
+async function savePlacement(ctx: Ctx, ships: PlacedShip[]): Promise<boolean> {
   const redis = getRedisClient();
   const chatId = ctx.chat?.id;
-  if (redis && chatId) {
-    await redis.set(
-      `shipgrid:${chatId}`,
-      JSON.stringify(ships),
-      "EX",
-      86400,
-    );
-  }
+  if (!redis || !chatId) return false;
+  await redis.set(
+    `shipgrid:${chatId}`,
+    JSON.stringify(ships),
+    "EX",
+    86400,
+  );
+  return true;
 }
 
 async function applyAutoPlacement(
@@ -258,7 +258,7 @@ async function applyAutoPlacement(
   state: PlacementState,
   shipsToPlace: ShipDef[],
   clearFirst: boolean,
-): Promise<void> {
+): Promise<{ saved: boolean }> {
   const baseGrid = clearFirst ? newGrid() : state.grid.map((r) => [...r]);
   const result = placeShips(baseGrid, shipsToPlace);
 
@@ -267,7 +267,7 @@ async function applyAutoPlacement(
       text: "Could not auto-place ships. Try resetting first.",
       show_alert: true,
     });
-    return;
+    return { saved: false };
   }
 
   if (clearFirst) {
@@ -295,9 +295,12 @@ async function applyAutoPlacement(
   setPlacement(ctx, state);
   await updateBothMessages(ctx, state);
 
+  let saved = false;
   if (state.remainingShips.length === 0) {
-    await savePlacement(ctx, allPlaced);
+    saved = await savePlacement(ctx, allPlaced);
   }
+
+  return { saved };
 }
 
 const composer = new Composer<Ctx>();
@@ -318,8 +321,15 @@ composer.callbackQuery("ships:autoplace", async (ctx) => {
     .filter((s) => state.remainingShips.includes(s.name))
     .sort((a, b) => b.size - a.size);
 
-  await applyAutoPlacement(ctx, state, remainingDefs, false);
-  await ctx.answerCallbackQuery();
+  const result = await applyAutoPlacement(ctx, state, remainingDefs, false);
+  if (state.remainingShips.length === 0 && !result.saved) {
+    await ctx.answerCallbackQuery({
+      text: "All ships placed but could not be saved: storage unavailable.",
+      show_alert: true,
+    });
+  } else {
+    await ctx.answerCallbackQuery();
+  }
 });
 
 composer.callbackQuery("ships:randomall", async (ctx) => {
@@ -330,8 +340,15 @@ composer.callbackQuery("ships:randomall", async (ctx) => {
   }
 
   const allDefs = [...SHIPS].sort((a, b) => b.size - a.size);
-  await applyAutoPlacement(ctx, state, allDefs, true);
-  await ctx.answerCallbackQuery();
+  const result = await applyAutoPlacement(ctx, state, allDefs, true);
+  if (state.remainingShips.length === 0 && !result.saved) {
+    await ctx.answerCallbackQuery({
+      text: "All ships placed but could not be saved: storage unavailable.",
+      show_alert: true,
+    });
+  } else {
+    await ctx.answerCallbackQuery();
+  }
 });
 
 composer.command("auto_ships", async (ctx) => {
@@ -352,10 +369,14 @@ composer.command("auto_ships", async (ctx) => {
     }
   }
 
-  await savePlacement(ctx, placement);
-
+  const saved = await savePlacement(ctx, placement);
   const gridText = buildGridDisplayText(grid);
-  await ctx.reply(`Auto-placed ships (saved):\n\n${gridText}\n\nUse /place_ships to manually adjust, or /auto_ships to regenerate.`);
+
+  if (saved) {
+    await ctx.reply(`Auto-placed ships (saved):\n\n${gridText}\n\nUse /place_ships to manually adjust, or /auto_ships to regenerate.`);
+  } else {
+    await ctx.reply(`Auto-placed ships (NOT saved — storage unavailable):\n\n${gridText}\n\nUse /auto_ships to try again when storage is available.`);
+  }
 });
 
 export default composer;

@@ -319,8 +319,16 @@ composer.callbackQuery("ships:done", async (ctx) => {
   }
 
   const redis = getRedisClient();
+  if (!redis) {
+    await ctx.answerCallbackQuery({
+      text: "Cannot confirm placement: persistent storage is unavailable.",
+      show_alert: true,
+    });
+    return;
+  }
+
   const chatId = ctx.chat?.id;
-  if (redis && chatId) {
+  if (chatId) {
     await redis.set(
       `shipgrid:${chatId}`,
       JSON.stringify(state.placedShips),
