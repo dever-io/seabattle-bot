@@ -26,4 +26,14 @@ describe("buildBot handler loader", () => {
     ]);
     expect(suite.failed).toBe(0);
   });
+
+  it("E4T2 matchmaking expansion spec passes including elapsed-time window widening", async () => {
+    const raw = JSON.parse(
+      readFileSync(new URL("./specs/matchmaking-expansion.json", import.meta.url), "utf8"),
+    ) as unknown[];
+    const specs = raw.map(parseBotSpec);
+    const suite = await runSpecs(() => buildBot("test-token"), specs);
+    expect(suite.failed).toBe(0);
+    expect(suite.passed).toBe(raw.length);
+  });
 });
