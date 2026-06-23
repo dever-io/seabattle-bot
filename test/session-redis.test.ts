@@ -25,6 +25,12 @@ function fakeClient(): RedisLike & { store: Map<string, string> } {
       const prefix = pattern.replace(/\*$/, "");
       return [...store.keys()].filter((k) => k.startsWith(prefix));
     },
+    async incr(k) {
+      const cur = store.has(k) ? parseInt(store.get(k)!, 10) || 0 : 0;
+      const next = cur + 1;
+      store.set(k, String(next));
+      return next;
+    },
   };
 }
 

@@ -48,10 +48,7 @@ export class RedisMoveStorage implements MoveStorage {
   }
 
   private async nextId(): Promise<string> {
-    const val = await this.client.get(MOVE_COUNTER_KEY);
-    const num = val ? parseInt(val, 10) : 0;
-    const nextNum = num + 1;
-    await this.client.set(MOVE_COUNTER_KEY, String(nextNum));
+    const nextNum = await this.client.incr(MOVE_COUNTER_KEY);
     return String(nextNum);
   }
 

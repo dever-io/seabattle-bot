@@ -42,10 +42,7 @@ export class RedisMatchStorage implements MatchStorage {
   }
 
   private async nextId(): Promise<string> {
-    const val = await this.client.get(MATCH_COUNTER_KEY);
-    const num = val ? parseInt(val, 10) : 0;
-    const nextNum = num + 1;
-    await this.client.set(MATCH_COUNTER_KEY, String(nextNum));
+    const nextNum = await this.client.incr(MATCH_COUNTER_KEY);
     return String(nextNum);
   }
 

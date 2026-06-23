@@ -20,6 +20,7 @@ export interface RedisLike {
   set(key: string, value: string): Promise<unknown>;
   del(key: string): Promise<unknown>;
   keys(pattern: string): Promise<string[]>;
+  incr(key: string): Promise<number>;
 }
 
 /**
