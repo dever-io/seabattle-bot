@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Leaderboard button shows leaderboard view",
+    "steps": [
+      {
+        "send": { "callback": "leaderboard:view", "messageId": 1 },
+        "expect": [
+          { "method": "answerCallbackQuery" },
+          { "method": "editMessageText" }
+        ]
+      }
+    ]
+  }
+]
