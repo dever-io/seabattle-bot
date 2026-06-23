@@ -9,6 +9,8 @@ import {
   SHOT_RESULT_SUNK,
 } from "../models/board.js";
 import { type ShipType, type ShipOrientation } from "../models/ship.js";
+import { checkWinCondition } from "../models/move.js";
+import { profileStore } from "../storage/profile-store.js";
 
 interface AttackCell {
   row: number;
@@ -30,12 +32,61 @@ const FIXED_PLACEMENTS: { type: ShipType; row: number; col: number; orientation:
   { type: "destroyer", row: 4, col: 0, orientation: "horizontal" },
 ];
 
+const RATING_DELTA = 25;
+
 function getAttackState(ctx: Ctx): AttackSession {
   return (ctx.session as Record<string, unknown>).attackState as AttackSession | undefined ?? {};
 }
 
 function setAttackState(ctx: Ctx, state: AttackSession): void {
   (ctx.session as Record<string, unknown>).attackState = state;
+}
+
+function clearAttackState(ctx: Ctx): void {
+  delete (ctx.session as Record<string, unknown>).attackState;
+}
+
+async function triggerEndgame(ctx: Ctx, winnerId: number, loserId: number): Promise<void> {
+  const store = profileStore();
+  const [winnerProfile, loserProfile] = await Promise.all([
+    store.get(winnerId),
+    store.get(loserId),
+  ]);
+
+  winnerProfile.wins += 1;
+  winnerProfile.rating += RATING_DELTA;
+  loserProfile.losses += 1;
+  loserProfile.rating = Math.max(0, loserProfile.rating - RATING_DELTA);
+
+  await Promise.all([
+    store.set(winnerId, winnerProfile),
+    store.set(loserId, loserProfile),
+  ]);
+
+  const keyboard = inlineKeyboard([
+    [
+      inlineButton("Rematch", "end:rematch"),
+      inlineButton("View replay", "end:replay"),
+    ],
+  ]);
+
+  await ctx.reply(
+    `You won! All enemy ships destroyed.\n` +
+      `New rating: ${winnerProfile.rating} (+${RATING_DELTA})\n` +
+      `Wins: ${winnerProfile.wins} | Losses: ${winnerProfile.losses}`,
+    { reply_markup: keyboard },
+  );
+
+  try {
+    await ctx.api.sendMessage(
+      loserId,
+      `You lost. All your ships were destroyed.\n` +
+        `New rating: ${loserProfile.rating} (-${RATING_DELTA})\n` +
+        `Wins: ${loserProfile.wins} | Losses: ${loserProfile.losses}`,
+      { reply_markup: keyboard },
+    );
+  } catch {
+  }
 }
 
 function buildGridKeyboard(attacks: AttackCell[]): ReturnType<typeof inlineKeyboard> {
@@ -190,6 +241,11 @@ composer.callbackQuery(/^atk:(\d+):(\d+)$/, async (ctx) => {
     const shipName = outcome.ship?.type ?? "ship";
     await ctx.answerCallbackQuery({ text: `Sunk the ${shipName}!`, show_alert: true });
     await notifyOpponent(ctx, state.opponentId, row, col, SHOT_RESULT_SUNK, shipName);
+
+    if (checkWinCondition(outcome.board)) {
+      await triggerEndgame(ctx, chatId, state.opponentId);
+      clearAttackState(ctx);
+    }
   } else {
     await ctx.answerCallbackQuery();
   }
