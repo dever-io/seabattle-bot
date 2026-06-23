@@ -33,7 +33,7 @@
       {
         "send": { "text": "/profile" },
         "expect": [
-          { "method": "sendMessage", "payload": { "text": "Name: User\nRating: 1200\nWins: 0\nLosses: 0\nWin rate: 0%" } }
+          { "method": "sendMessage", "payload": { "text": "Name: Test\nRating: 1200\nWins: 0\nLosses: 0\nWin rate: 0%" } }
         ]
       }
     ]
