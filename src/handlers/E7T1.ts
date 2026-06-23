@@ -155,10 +155,16 @@ composer.command("attack", async (ctx) => {
 
   await seedOpponentBoard(opponentId);
 
+  const board = await boardStorage.getBoard(opponentId);
+  const existingAttacks: AttackCell[] = [
+    ...board.hits.map((p) => ({ row: p.row, col: p.col, hit: true })),
+    ...board.misses.map((p) => ({ row: p.row, col: p.col, hit: false })),
+  ];
+
   const state: AttackSession = {
     attackMsgId: 0,
     opponentId,
-    attacks: [],
+    attacks: existingAttacks,
   };
 
   const gridKeyboard = buildGridKeyboard(state.attacks ?? []);
