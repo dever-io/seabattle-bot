@@ -170,28 +170,31 @@ composer.command("attack", async (ctx) => {
   let matchId: string | undefined;
 
   const matches = await matchStorage.findByPlayer(chatId);
-  const activeMatch = matches.find((m) => m.state !== "completed");
+  const activeMatch =
+    matches.find((m) => m.state === "waiting") ??
+    matches.find((m) => m.state !== "completed");
 
-  if (activeMatch) {
-    if (activeMatch.state === "waiting") {
-      const started = await matchStorage.startMatch(activeMatch.id);
-      if (!started) {
-        await ctx.reply("Failed to start match.");
-        return;
-      }
-      activeMatch.state = "in_progress";
-      activeMatch.turn = started.turn;
-    }
-    if (activeMatch.turn !== chatId) {
-      await ctx.reply("It is not your turn.");
+  if (!activeMatch) {
+    await ctx.reply("You are not in an active match. Use /newmatch or /rmatch to find an opponent first.");
+    return;
+  }
+
+  if (activeMatch.state === "waiting") {
+    const started = await matchStorage.startMatch(activeMatch.id);
+    if (!started) {
+      await ctx.reply("Failed to start match.");
       return;
     }
-    opponentId =
-      activeMatch.playerA === chatId ? activeMatch.playerB : activeMatch.playerA;
-    matchId = activeMatch.id;
-  } else {
-    opponentId = chatId + 1;
+    activeMatch.state = "in_progress";
+    activeMatch.turn = started.turn;
   }
+  if (activeMatch.turn !== chatId) {
+    await ctx.reply("It is not your turn.");
+    return;
+  }
+  opponentId =
+    activeMatch.playerA === chatId ? activeMatch.playerB : activeMatch.playerA;
+  matchId = activeMatch.id;
 
   await seedOpponentBoard(opponentId);
 

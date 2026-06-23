@@ -3,6 +3,12 @@
     "name": "/attack shows the attack grid",
     "steps": [
       {
+        "send": { "text": "/newmatch 2" },
+        "expect": [
+          { "method": "sendMessage" }
+        ]
+      },
+      {
         "send": { "text": "/attack" },
         "expect": [
           {
@@ -18,6 +24,12 @@
   {
     "name": "firing at an empty cell shows miss",
     "steps": [
+      {
+        "send": { "text": "/newmatch 2" },
+        "expect": [
+          { "method": "sendMessage" }
+        ]
+      },
       {
         "send": { "text": "/attack" },
         "expect": [
@@ -42,6 +54,12 @@
     "name": "firing at a ship cell shows hit",
     "steps": [
       {
+        "send": { "text": "/newmatch 2" },
+        "expect": [
+          { "method": "sendMessage" }
+        ]
+      },
+      {
         "send": { "text": "/attack" },
         "expect": [
           {
@@ -64,6 +82,12 @@
   {
     "name": "sinking a ship after hitting all its cells",
     "steps": [
+      {
+        "send": { "text": "/newmatch 2" },
+        "expect": [
+          { "method": "sendMessage" }
+        ]
+      },
       {
         "send": { "text": "/attack" },
         "expect": [
@@ -108,6 +132,12 @@
   {
     "name": "firing at an already-hit cell shows duplicate error",
     "steps": [
+      {
+        "send": { "text": "/newmatch 2" },
+        "expect": [
+          { "method": "sendMessage" }
+        ]
+      },
       {
         "send": { "text": "/attack" },
         "expect": [
