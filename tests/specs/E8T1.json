@@ -1,0 +1,80 @@
+[
+  {
+    "name": "/endgame with no active game",
+    "steps": [
+      {
+        "send": { "text": "/endgame" },
+        "expect": [
+          { "method": "sendMessage", "payload": { "text": "No active game found. Start with /attack." } }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/endgame while battle continues",
+    "steps": [
+      {
+        "send": { "text": "/attack" },
+        "expect": [{ "method": "sendMessage" }]
+      },
+      {
+        "send": { "text": "/endgame" },
+        "expect": [
+          { "method": "sendMessage", "payload": { "text": "The battle continues! 5 enemy ships still afloat." } }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/endgame after all ships sunk shows victory with rating update",
+    "steps": [
+      { "send": { "text": "/attack" }, "expect": [{ "method": "sendMessage" }] },
+      { "send": { "callback": "atk:0:0" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:0:1" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:0:2" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:0:3" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:0:4" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:1:0" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:1:1" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:1:2" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:1:3" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:2:0" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:2:1" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:2:2" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:3:0" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:3:1" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:3:2" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:4:0" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      { "send": { "callback": "atk:4:1" }, "expect": [{ "method": "answerCallbackQuery" }] },
+      {
+        "send": { "text": "/endgame" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "You won! All enemy ships destroyed.\nNew rating: 1225 (+25)\nWins: 1 | Losses: 0"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rematch callback works",
+    "steps": [
+      { "send": { "callback": "end:rematch" }, "expect": [
+        { "method": "answerCallbackQuery" },
+        { "method": "editMessageText", "payload": { "text": "Rematch requested! Set up a new game with /invite or /quickmatch." } }
+      ] }
+    ]
+  },
+  {
+    "name": "view replay callback works",
+    "steps": [
+      { "send": { "callback": "end:replay" }, "expect": [
+        { "method": "answerCallbackQuery" },
+        { "method": "editMessageText", "payload": { "text": "Replay viewer coming soon. Check your match history with /history." } }
+      ] }
+    ]
+  }
+]
