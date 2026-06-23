@@ -25,7 +25,8 @@ composer.command("invite", async (ctx) => {
 composer.command("start", async (ctx, next) => {
   const param = ctx.match?.trim();
   if (!param || !param.startsWith("invite_")) {
-    return next();
+    await ctx.reply("Welcome! I am ready to help.");
+    return;
   }
 
   const code = param.slice("invite_".length);

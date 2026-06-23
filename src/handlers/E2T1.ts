@@ -22,6 +22,7 @@ composer.command("start", async (ctx, next) => {
       ]),
     },
   );
+  return next();
 });
 
 composer.callbackQuery("onboarding:start", async (ctx) => {
