@@ -1,0 +1,14 @@
+[
+  {
+    "name": "invite:create callback generates and shares invite link",
+    "steps": [
+      {
+        "send": { "callback": "invite:create" },
+        "expect": [
+          { "method": "answerCallbackQuery" },
+          { "method": "sendMessage" }
+        ]
+      }
+    ]
+  }
+]
