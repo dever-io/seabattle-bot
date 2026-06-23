@@ -1,0 +1,41 @@
+[
+  {
+    "name": "/start creates a profile and shows get started button",
+    "steps": [
+      {
+        "send": { "text": "/start" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Welcome, Test! Your profile has been created.\nReady to get started?",
+              "reply_markup": {
+                "inline_keyboard": [
+                  [{ "text": "Get Started", "callback_data": "onboarding:start" }]
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "get started button completes onboarding",
+    "steps": [
+      {
+        "send": { "text": "/start" },
+        "expect": [
+          { "method": "sendMessage" }
+        ]
+      },
+      {
+        "send": { "callback": "onboarding:start", "messageId": 1 },
+        "expect": [
+          { "method": "answerCallbackQuery" },
+          { "method": "editMessageText", "payload": { "text": "Great, you're all set!" } }
+        ]
+      }
+    ]
+  }
+]
