@@ -1,0 +1,61 @@
+[
+  {
+    "name": "/auto_ships generates valid placement",
+    "steps": [
+      {
+        "send": { "text": "/auto_ships" },
+        "expect": [
+          { "method": "sendMessage" }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "randomize callback regenerates all ships",
+    "steps": [
+      {
+        "send": { "text": "/place_ships" },
+        "expect": [
+          { "method": "sendMessage" },
+          { "method": "sendMessage" }
+        ]
+      },
+      {
+        "send": { "callback": "ships:randomall" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery" }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "auto-place finishes remaining ships",
+    "steps": [
+      {
+        "send": { "text": "/place_ships" },
+        "expect": [
+          { "method": "sendMessage" },
+          { "method": "sendMessage" }
+        ]
+      },
+      {
+        "send": { "callback": "ships:c:0:0" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery" }
+        ]
+      },
+      {
+        "send": { "callback": "ships:autoplace" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery" }
+        ]
+      }
+    ]
+  }
+]

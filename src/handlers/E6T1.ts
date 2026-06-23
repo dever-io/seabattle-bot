@@ -129,6 +129,11 @@ function buildControlsKeyboard(state: PlacementState): ReturnType<typeof inlineK
   actionRow.push(inlineButton("Reset", "ships:reset"));
   rows.push(actionRow);
 
+  rows.push([
+    inlineButton("Auto-place", "ships:autoplace"),
+    inlineButton("Randomize", "ships:randomall"),
+  ]);
+
   return inlineKeyboard(rows);
 }
 

@@ -23,6 +23,10 @@
                   ],
                   [
                     { "text": "Reset", "callback_data": "ships:reset" }
+                  ],
+                  [
+                    { "text": "Auto-place", "callback_data": "ships:autoplace" },
+                    { "text": "Randomize", "callback_data": "ships:randomall" }
                   ]
                 ]
               }
