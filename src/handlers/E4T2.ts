@@ -2,16 +2,7 @@ import { Composer } from "grammy";
 import type { Ctx } from "../bot.js";
 import { getRedisClient } from "../storage/persistent.js";
 
-interface RatingQueueRedis {
-  zadd(key: string, score: number, member: string): Promise<number>;
-  zrem(key: string, ...members: string[]): Promise<number>;
-  zrangebyscore(key: string, min: number, max: number): Promise<string[]>;
-  set(key: string, value: string): Promise<unknown>;
-  get(key: string): Promise<string | null>;
-  del(key: string): Promise<unknown>;
-}
-
-const redis = getRedisClient() as unknown as RatingQueueRedis | null;
+const redis = getRedisClient();
 
 const composer = new Composer<Ctx>();
 

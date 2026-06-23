@@ -6,6 +6,9 @@ export interface DomainRedis {
   del(key: string): Promise<unknown>;
   incr(key: string): Promise<number>;
   sadd(key: string, ...members: string[]): Promise<number>;
+  zadd(key: string, score: number, member: string): Promise<number>;
+  zrem(key: string, ...members: string[]): Promise<number>;
+  zrangebyscore(key: string, min: number, max: number): Promise<string[]>;
   lpush(key: string, ...values: string[]): Promise<number>;
   rpush(key: string, ...values: string[]): Promise<number>;
   lpop(key: string): Promise<string | null>;
