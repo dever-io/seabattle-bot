@@ -1,6 +1,14 @@
 import { Composer } from "grammy";
 import { readdirSync } from "node:fs";
 import { createBot, type BotContext } from "./toolkit/index.js";
+import { resetUserStorage } from "./models/user.js";
+import { resetBoardStorage } from "./models/board.js";
+import { resetMatchStorage } from "./models/match.js";
+import { resetMoveStorage } from "./models/move.js";
+import { resetMatchInviteStorage } from "./models/invite.js";
+import { resetMatchmakingQueue } from "./storage/matchmaking-queue.js";
+import { resetProfileStore } from "./storage/profile-store.js";
+import { resetInviteStore } from "./storage/invite-store.js";
 
 // The per-chat session shape (ephemeral conversation state only). Extend as the
 // bot grows. Durable domain data must NOT live here — use the toolkit's
@@ -18,6 +26,15 @@ export type Ctx = BotContext<Session>;
  * Composer — NEVER edit this file (concurrent feature PRs would conflict).
  */
 export async function buildBot(token: string) {
+  resetUserStorage();
+  resetBoardStorage();
+  resetMatchStorage();
+  resetMoveStorage();
+  resetMatchInviteStorage();
+  resetMatchmakingQueue();
+  resetProfileStore();
+  resetInviteStore();
+
   const bot = createBot<Session>(token, {
     initial: () => ({}),
   });
