@@ -1,0 +1,130 @@
+[
+  {
+    "name": "/attack shows the attack grid",
+    "steps": [
+      {
+        "send": { "text": "/attack" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Attack grid — tap a cell to fire!\nX = hit, O = miss, ~ = unknown"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "firing at an empty cell shows miss",
+    "steps": [
+      {
+        "send": { "text": "/attack" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Attack grid — tap a cell to fire!\nX = hit, O = miss, ~ = unknown"
+            }
+          }
+        ]
+      },
+      {
+        "send": { "callback": "atk:9:9" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery", "payload": { "text": "Miss!", "show_alert": true } }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "firing at a ship cell shows hit",
+    "steps": [
+      {
+        "send": { "text": "/attack" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Attack grid — tap a cell to fire!\nX = hit, O = miss, ~ = unknown"
+            }
+          }
+        ]
+      },
+      {
+        "send": { "callback": "atk:0:0" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery", "payload": { "text": "Hit!", "show_alert": true } }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "sinking a ship after hitting all its cells",
+    "steps": [
+      {
+        "send": { "text": "/attack" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Attack grid — tap a cell to fire!\nX = hit, O = miss, ~ = unknown"
+            }
+          }
+        ]
+      },
+      {
+        "send": { "callback": "atk:1:0" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery", "payload": { "text": "Hit!", "show_alert": true } }
+        ]
+      },
+      {
+        "send": { "callback": "atk:1:1" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery", "payload": { "text": "Hit!", "show_alert": true } }
+        ]
+      },
+      {
+        "send": { "callback": "atk:1:2" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery", "payload": { "text": "Hit!", "show_alert": true } }
+        ]
+      },
+      {
+        "send": { "callback": "atk:1:3" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery", "payload": { "text": "Sunk the battleship!", "show_alert": true } }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "firing at an already-hit cell shows duplicate error",
+    "steps": [
+      {
+        "send": { "text": "/attack" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Attack grid — tap a cell to fire!\nX = hit, O = miss, ~ = unknown"
+            }
+          }
+        ]
+      },
+      {
+        "send": { "callback": "atk:9:9" },
+        "expect": [
+          { "method": "answerCallbackQuery", "payload": { "text": "Already fired there!", "show_alert": true } }
+        ]
+      }
+    ]
+  }
+]
