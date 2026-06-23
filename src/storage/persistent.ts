@@ -7,6 +7,12 @@ export interface DomainRedis {
   incr(key: string): Promise<number>;
   sadd(key: string, ...members: string[]): Promise<number>;
   lpush(key: string, ...values: string[]): Promise<number>;
+  rpush(key: string, ...values: string[]): Promise<number>;
+  lpop(key: string): Promise<string | null>;
+  rpop(key: string): Promise<string | null>;
+  llen(key: string): Promise<number>;
+  lpos(key: string, value: string): Promise<number | null>;
+  lrem(key: string, count: number, value: string): Promise<number>;
   eval(...args: unknown[]): Promise<unknown>;
 }
 

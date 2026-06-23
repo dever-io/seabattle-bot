@@ -2,21 +2,11 @@ import { Composer } from "grammy";
 import type { Ctx } from "../bot.js";
 import { getRedisClient } from "../storage/persistent.js";
 
-interface MatchmakingRedis {
-  lpush(key: string, ...values: string[]): Promise<number>;
-  rpop(key: string): Promise<string | null>;
-  lrem(key: string, count: number, value: string): Promise<number>;
-  lpos(key: string, value: string): Promise<number | null>;
-  set(key: string, value: string): Promise<unknown>;
-  del(key: string): Promise<unknown>;
-}
-
-const redis = getRedisClient() as unknown as MatchmakingRedis | null;
+const redis = getRedisClient();
 
 const composer = new Composer<Ctx>();
 
 const QUEUE_KEY = "matchmaking:queue";
-const MATCHES_KEY = "matchmaking:matches";
 
 composer.command("quickmatch", async (ctx) => {
   const chatId = ctx.chat?.id;
@@ -38,43 +28,42 @@ composer.command("quickmatch", async (ctx) => {
     return;
   }
 
-  await redis.lpush(QUEUE_KEY, currentChatStr);
+  await redis.rpush(QUEUE_KEY, currentChatStr);
 
-  const opponentStr = await redis.rpop(QUEUE_KEY);
+  const queueLen = await redis.llen(QUEUE_KEY);
 
-  if (opponentStr && opponentStr !== currentChatStr) {
-    await redis.lrem(QUEUE_KEY, 1, currentChatStr);
+  if (queueLen >= 2) {
+    const p1 = await redis.lpop(QUEUE_KEY);
+    const p2 = await redis.lpop(QUEUE_KEY);
 
-    const matchKey = `match:${opponentStr}:${currentChatStr}`;
-    await redis.set(matchKey, JSON.stringify({
-      p1: opponentStr,
-      p2: currentChatStr,
-      createdAt: Date.now(),
-    }));
+    if (p1 && p2) {
+      const matchKey = `match:${p1}:${p2}`;
+      await redis.set(matchKey, JSON.stringify({
+        p1,
+        p2,
+        createdAt: Date.now(),
+      }));
 
-    const confirmKeyboard = {
-      inline_keyboard: [[
-        { text: "Place ships now", callback_data: "ships:place" },
-        { text: "Auto-place", callback_data: "ships:auto" },
-      ]],
-    };
+      const confirmKeyboard = {
+        inline_keyboard: [[
+          { text: "Place ships now", callback_data: "ships:place" },
+          { text: "Auto-place", callback_data: "ships:auto" },
+        ]],
+      };
 
-    await ctx.reply("Match found! Place ships now or Auto-place.", {
-      reply_markup: confirmKeyboard,
-    });
+      const p1ChatId = parseInt(p1, 10);
+      const p2ChatId = parseInt(p2, 10);
 
-    const opponentChatId = parseInt(opponentStr, 10);
-    await ctx.api.sendMessage(
-      opponentChatId,
-      "Match found! Place ships now or Auto-place.",
-      { reply_markup: confirmKeyboard },
-    );
-  } else {
-    if (opponentStr === currentChatStr) {
-      await redis.rpop(QUEUE_KEY);
-      await redis.lpush(QUEUE_KEY, currentChatStr);
+      await Promise.all([
+        ctx.api.sendMessage(p1ChatId, "Match found! Place ships now or Auto-place.", {
+          reply_markup: confirmKeyboard,
+        }),
+        ctx.api.sendMessage(p2ChatId, "Match found! Place ships now or Auto-place.", {
+          reply_markup: confirmKeyboard,
+        }),
+      ]);
     }
-
+  } else {
     await ctx.reply("Searching for an opponent...");
   }
 });
