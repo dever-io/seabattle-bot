@@ -1,0 +1,69 @@
+[
+  {
+    "name": "/rmatch starts rating-based matchmaking with initial window",
+    "steps": [
+      {
+        "send": { "text": "/rmatch" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": { "text": "Searching for opponent...\nRating: 1200\nRating window: ±100" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "mm:wait shows current search status with window",
+    "steps": [
+      {
+        "send": { "text": "/rmatch" },
+        "expect": [{ "method": "sendMessage" }]
+      },
+      {
+        "send": { "callback": "mm:wait", "messageId": 1 },
+        "expect": [
+          { "method": "answerCallbackQuery" },
+          {
+            "method": "editMessageText",
+            "payload": { "text": "Still searching...\nRating: 1200\nRating window: ±100 (no expansions yet)\nElapsed: ~0s" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "mm:friend exits matchmaking and shows invite link",
+    "steps": [
+      {
+        "send": { "text": "/rmatch" },
+        "expect": [{ "method": "sendMessage" }]
+      },
+      {
+        "send": { "callback": "mm:friend", "messageId": 1 },
+        "expect": [
+          { "method": "answerCallbackQuery" },
+          {
+            "method": "editMessageText",
+            "payload": { "text": "Matchmaking cancelled.\n\nShare this link with a friend to play:\nhttps://t.me/test_bot?start=invite1" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "mm:wait with no active session shows appropriate message",
+    "steps": [
+      {
+        "send": { "callback": "mm:wait", "messageId": 1 },
+        "expect": [
+          { "method": "answerCallbackQuery" },
+          {
+            "method": "editMessageText",
+            "payload": { "text": "No active matchmaking search. Use /rmatch to start." }
+          }
+        ]
+      }
+    ]
+  }
+]
