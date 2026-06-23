@@ -9,6 +9,7 @@ import {
   SHOT_RESULT_SUNK,
 } from "../models/board.js";
 import { type ShipType, type ShipOrientation } from "../models/ship.js";
+import { matchStorage } from "../models/match.js";
 
 interface AttackCell {
   row: number;
@@ -96,6 +97,13 @@ composer.command("attack", async (ctx) => {
   const opponentId = chatId + 1;
 
   await seedOpponentBoard(opponentId);
+
+  const existingMatches = await matchStorage.findByPlayer(chatId);
+  const active = existingMatches.find((m) => m.state === "in_progress");
+  if (!active) {
+    const match = await matchStorage.create(chatId, opponentId);
+    await matchStorage.startMatch(match.id);
+  }
 
   const state: AttackSession = {
     attackMsgId: 0,

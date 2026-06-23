@@ -4,6 +4,7 @@ import { inlineButton, inlineKeyboard } from "../toolkit/ui/keyboard.js";
 import { boardStorage } from "../models/board.js";
 import { checkWinCondition } from "../models/move.js";
 import { profileStore } from "../storage/profile-store.js";
+import { matchStorage } from "../models/match.js";
 
 interface AttackSession {
   attackMsgId?: number;
@@ -18,29 +19,13 @@ const RATING_DELTA = 25;
 
 const composer = new Composer<Ctx>();
 
-composer.command("endgame", async (ctx) => {
-  const chatId = ctx.chat!.id;
-  const attackSession = getAttackSession(ctx);
-
-  if (!attackSession?.opponentId) {
-    await ctx.reply("No active game found. Start with /attack.");
-    return;
-  }
-
-  const opponentId = attackSession.opponentId;
-  const board = await boardStorage.getBoard(opponentId);
-
-  if (!checkWinCondition(board)) {
-    const remaining = board.ships.filter((s) => !s.sunk).length;
-    await ctx.reply(
-      `The battle continues! ${remaining} enemy ship${remaining !== 1 ? "s" : ""} still afloat.`,
-    );
-    return;
-  }
-
-  const winnerId = chatId;
-  const loserId = opponentId;
-
+async function resolveEndgame(
+  ctx: Ctx,
+  chatId: number,
+  winnerId: number,
+  loserId: number,
+  matchId?: string,
+): Promise<void> {
   const store = profileStore();
   const [winnerProfile, loserProfile] = await Promise.all([
     store.get(winnerId),
@@ -64,23 +49,120 @@ composer.command("endgame", async (ctx) => {
     ],
   ]);
 
-  await ctx.reply(
-    `You won! All enemy ships destroyed.\n` +
-      `New rating: ${winnerProfile.rating} (+${RATING_DELTA})\n` +
-      `Wins: ${winnerProfile.wins} | Losses: ${winnerProfile.losses}`,
-    { reply_markup: keyboard },
-  );
+  const isWinner = chatId === winnerId;
 
-  try {
-    await ctx.api.sendMessage(
-      loserId,
+  if (isWinner) {
+    await ctx.reply(
+      `You won! All enemy ships destroyed.\n` +
+        `New rating: ${winnerProfile.rating} (+${RATING_DELTA})\n` +
+        `Wins: ${winnerProfile.wins} | Losses: ${winnerProfile.losses}`,
+      { reply_markup: keyboard },
+    );
+  } else {
+    await ctx.reply(
       `You lost. All your ships were destroyed.\n` +
         `New rating: ${loserProfile.rating} (-${RATING_DELTA})\n` +
         `Wins: ${loserProfile.wins} | Losses: ${loserProfile.losses}`,
       { reply_markup: keyboard },
     );
+  }
+
+  const otherId = isWinner ? loserId : winnerId;
+  const otherProfile = isWinner ? loserProfile : winnerProfile;
+
+  try {
+    if (isWinner) {
+      await ctx.api.sendMessage(
+        otherId,
+        `You lost. All your ships were destroyed.\n` +
+          `New rating: ${otherProfile.rating} (-${RATING_DELTA})\n` +
+          `Wins: ${otherProfile.wins} | Losses: ${otherProfile.losses}`,
+        { reply_markup: keyboard },
+      );
+    } else {
+      await ctx.api.sendMessage(
+        otherId,
+        `Opponent conceded. You won!\n` +
+          `New rating: ${otherProfile.rating} (+${RATING_DELTA})\n` +
+          `Wins: ${otherProfile.wins} | Losses: ${otherProfile.losses}`,
+        { reply_markup: keyboard },
+      );
+    }
   } catch {
     // opponent may not be reachable
+  }
+
+  if (matchId) {
+    try {
+      await matchStorage.completeMatch(matchId);
+    } catch {
+      // best-effort
+    }
+  }
+}
+
+composer.command("endgame", async (ctx) => {
+  const chatId = ctx.chat!.id;
+
+  const attackSession = getAttackSession(ctx);
+
+  if (attackSession?.opponentId) {
+    const opponentId = attackSession.opponentId;
+    const board = await boardStorage.getBoard(opponentId);
+
+    if (!checkWinCondition(board)) {
+      const remaining = board.ships.filter((s) => !s.sunk).length;
+      await ctx.reply(
+        `The battle continues! ${remaining} enemy ship${remaining !== 1 ? "s" : ""} still afloat.`,
+      );
+      return;
+    }
+
+    const matches = await matchStorage.findByPlayer(chatId);
+    const activeMatch = matches.find(
+      (m) =>
+        m.state === "in_progress" &&
+        (m.playerA === opponentId || m.playerB === opponentId),
+    );
+    await resolveEndgame(ctx, chatId, chatId, opponentId, activeMatch?.id);
+    return;
+  }
+
+  const matches = await matchStorage.findByPlayer(chatId);
+  const active = matches.find((m) => m.state === "in_progress");
+
+  if (!active) {
+    await ctx.reply("No active game found. Start with /attack.");
+    return;
+  }
+
+  const opponentId =
+    active.playerA === chatId ? active.playerB : active.playerA;
+
+  const ownBoard = await boardStorage.getBoard(chatId);
+  const oppBoard = await boardStorage.getBoard(opponentId);
+
+  if (checkWinCondition(oppBoard)) {
+    await resolveEndgame(ctx, chatId, chatId, opponentId, active.id);
+    return;
+  }
+
+  if (checkWinCondition(ownBoard)) {
+    await resolveEndgame(ctx, chatId, opponentId, chatId, active.id);
+    return;
+  }
+
+  const remainingOwn = ownBoard.ships.filter((s) => !s.sunk).length;
+  const remainingOpp = oppBoard.ships.filter((s) => !s.sunk).length;
+
+  if (ownBoard.ships.length > 0) {
+    await ctx.reply(
+      `The battle continues! ${remainingOwn} of your ship${remainingOwn !== 1 ? "s" : ""} and ${remainingOpp} enemy ship${remainingOpp !== 1 ? "s" : ""} still afloat.`,
+    );
+  } else {
+    await ctx.reply(
+      `The battle continues! ${remainingOpp} enemy ship${remainingOpp !== 1 ? "s" : ""} still afloat.`,
+    );
   }
 });
 
