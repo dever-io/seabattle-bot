@@ -1,0 +1,96 @@
+[
+  {
+    "name": "/fire without active match shows error",
+    "steps": [
+      {
+        "send": { "text": "/fire 0 0" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": { "text": "You have no active match." }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/history without active match shows error",
+    "steps": [
+      {
+        "send": { "text": "/history" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": { "text": "You have no active match." }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/fire with missing coordinates shows usage",
+    "steps": [
+      {
+        "send": { "text": "/fire" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": { "text": "Usage: /fire <row> <col>" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/fire with invalid coordinates shows error",
+    "steps": [
+      {
+        "send": { "text": "/fire abc 0" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": { "text": "Row and col must be non-negative integers." }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "full move flow: create match, fire, record move, check history",
+    "steps": [
+      {
+        "send": { "text": "/newmatch 99" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Match #1 created.\nState: waiting\nPlayer A: Test (1)\nPlayer B: unknown (99)\nTurn: none"
+            }
+          }
+        ]
+      },
+      {
+        "send": { "text": "/fire 0 0" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Move #1: miss at (0,0). Next player's turn."
+            }
+          }
+        ]
+      },
+      {
+        "send": { "text": "/history" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Move history for match #1:\n#1: (0,0) → miss"
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
