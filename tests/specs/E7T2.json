@@ -72,16 +72,7 @@
         "expect": [
           {
             "method": "sendMessage",
-            "payload": {
-              "text": "Your opponent has made a move. It's your turn! Match #1",
-              "reply_markup": {
-                "inline_keyboard": [[{ "text": "Your Turn", "callback_data": "turnt:match:1" }]]
-              }
-            }
-          },
-          {
-            "method": "sendMessage",
-            "payload": { "text": "Turn passed. It is now player 1's turn." }
+            "payload": { "text": "You must make a move before passing the turn." }
           }
         ]
       }

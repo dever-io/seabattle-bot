@@ -1,6 +1,7 @@
 import { Composer } from "grammy";
 import type { Ctx } from "../bot.js";
 import { matchStorage } from "../models/match.js";
+import { moveStorage } from "../models/move.js";
 import { inlineButton, inlineKeyboard } from "../toolkit/ui/keyboard.js";
 
 const composer = new Composer<Ctx>();
@@ -31,6 +32,12 @@ composer.command("turnt", async (ctx) => {
 
   if (match.turn !== ctx.from.id) {
     await ctx.reply("It is not your turn.");
+    return;
+  }
+
+  const moves = await moveStorage.findByPlayerAndMatch(ctx.from.id, matchId);
+  if (moves.length === 0) {
+    await ctx.reply("You must make a move before passing the turn.");
     return;
   }
 
