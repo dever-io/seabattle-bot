@@ -59,14 +59,22 @@ function canPlaceShip(
   orientation: "H" | "V",
 ): boolean {
   if (orientation === "H") {
-    if (col + size > GRID_SIZE) return false;
-    for (let c = col; c < col + size; c++) {
-      if (grid[row][c] !== 0) return false;
+    if (col < 0 || col + size > GRID_SIZE) return false;
+    for (let r = row - 1; r <= row + 1; r++) {
+      for (let c = col - 1; c <= col + size; c++) {
+        if (r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE && grid[r][c] === 1) {
+          return false;
+        }
+      }
     }
   } else {
-    if (row + size > GRID_SIZE) return false;
-    for (let r = row; r < row + size; r++) {
-      if (grid[r][col] !== 0) return false;
+    if (row < 0 || row + size > GRID_SIZE) return false;
+    for (let r = row - 1; r <= row + size; r++) {
+      for (let c = col - 1; c <= col + 1; c++) {
+        if (r >= 0 && r < GRID_SIZE && c >= 0 && c < GRID_SIZE && grid[r][c] === 1) {
+          return false;
+        }
+      }
     }
   }
   return true;
