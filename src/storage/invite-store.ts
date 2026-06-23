@@ -79,16 +79,25 @@ export class InviteStore {
 
   async consumeInvite(code: string): Promise<InviteData | null> {
     const key = INVITE_KEY_PREFIX + code;
-    const raw = await this.read(key);
-    if (!raw) return null;
-    let data: InviteData;
+    const redis = this.getClient();
+    if (redis) {
+      const script = `local v = redis.call('GET', KEYS[1]); if v then redis.call('DEL', KEYS[1]); end; return v`;
+      const raw = await redis.eval(script, 1, key) as string | null;
+      if (!raw) return null;
+      try {
+        return JSON.parse(raw) as InviteData;
+      } catch {
+        return null;
+      }
+    }
+    const raw = this.fallback.get(key);
+    if (raw === undefined) return null;
+    this.fallback.delete(key);
     try {
-      data = JSON.parse(raw) as InviteData;
+      return JSON.parse(raw) as InviteData;
     } catch {
       return null;
     }
-    await this.remove(key);
-    return data;
   }
 
   async createPendingMatch(match: PendingMatch, ttlSeconds: number = DEFAULT_TTL): Promise<void> {
