@@ -3,6 +3,7 @@ import type { Ctx } from "../bot.js";
 import { inlineButton, inlineKeyboard } from "../toolkit/ui/keyboard.js";
 import { boardStorage, BOARD_SIZE } from "../models/board.js";
 import { checkWinCondition } from "../models/move.js";
+import type { ShipType, ShipOrientation } from "../models/ship.js";
 import { profileStore } from "../storage/profile-store.js";
 
 interface AttackCell {
@@ -93,9 +94,66 @@ composer.command("endgame", async (ctx) => {
 
 composer.callbackQuery("end:rematch", async (ctx) => {
   await ctx.answerCallbackQuery();
-  await ctx.editMessageText(
-    "Rematch requested! Set up a new game with /invite or /quickmatch.",
+
+  const attackSession = getAttackSession(ctx);
+  if (!attackSession?.opponentId) {
+    await ctx.editMessageText("No recent game to rematch.");
+    return;
+  }
+
+  const opponentId = attackSession.opponentId;
+
+  await boardStorage.deleteBoard(opponentId);
+
+  const placements: { type: ShipType; row: number; col: number; orientation: ShipOrientation }[] = [
+    { type: "carrier", row: 0, col: 0, orientation: "horizontal" },
+    { type: "battleship", row: 1, col: 0, orientation: "horizontal" },
+    { type: "cruiser", row: 2, col: 0, orientation: "horizontal" },
+    { type: "submarine", row: 3, col: 0, orientation: "horizontal" },
+    { type: "destroyer", row: 4, col: 0, orientation: "horizontal" },
+  ];
+
+  for (const p of placements) {
+    const result = await boardStorage.placeShip(
+      opponentId,
+      p.type,
+      p.row,
+      p.col,
+      p.orientation,
+    );
+    if (!result.ok) {
+      if (result.error === "duplicate") continue;
+      await ctx.editMessageText("Rematch failed: could not set up fresh board.");
+      return;
+    }
+  }
+
+  const gridButtons: ReturnType<typeof inlineButton>[][] = [];
+  for (let r = 0; r < BOARD_SIZE; r++) {
+    const row: ReturnType<typeof inlineButton>[] = [];
+    for (let c = 0; c < BOARD_SIZE; c++) {
+      row.push(inlineButton("~", `atk:${r}:${c}`));
+    }
+    gridButtons.push(row);
+  }
+
+  await ctx.editMessageText("Rematch! Here's your new attack grid.");
+
+  const msg = await ctx.reply(
+    "Attack grid — tap a cell to fire!\nX = hit, O = miss, ~ = unknown",
+    { reply_markup: inlineKeyboard(gridButtons) },
   );
+
+  const state: AttackSession = {
+    attackMsgId: msg.message_id,
+    opponentId,
+    attacks: [],
+  };
+  (ctx.session as Record<string, unknown>).attackState = state;
+
+  try {
+    await ctx.api.sendMessage(opponentId, "Rematch started! Your opponent is ready for a new battle.");
+  } catch {}
 });
 
 composer.callbackQuery("end:replay", async (ctx) => {

@@ -64,7 +64,7 @@
     "steps": [
       { "send": { "callback": "end:rematch" }, "expect": [
         { "method": "answerCallbackQuery" },
-        { "method": "editMessageText", "payload": { "text": "Rematch requested! Set up a new game with /invite or /quickmatch." } }
+        { "method": "editMessageText", "payload": { "text": "No recent game to rematch." } }
       ] }
     ]
   },
