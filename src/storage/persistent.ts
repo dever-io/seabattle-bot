@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 
 export interface DomainRedis {
-  set(key: string, value: string, expiryMode: string, seconds: number): Promise<unknown>;
+  set(key: string, value: string, expiryMode?: string, seconds?: number): Promise<unknown>;
   get(key: string): Promise<string | null>;
   del(key: string): Promise<unknown>;
   sadd(key: string, ...members: string[]): Promise<number>;

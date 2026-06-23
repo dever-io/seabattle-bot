@@ -34,10 +34,14 @@ export class InviteStore {
     return this.fallback.get(key) ?? null;
   }
 
-  private async write(key: string, value: string, ttlSeconds: number): Promise<void> {
+  private async write(key: string, value: string, ttlSeconds?: number): Promise<void> {
     const redis = this.getClient();
     if (redis) {
-      await redis.set(key, value, "EX", ttlSeconds);
+      if (ttlSeconds !== undefined) {
+        await redis.set(key, value, "EX", ttlSeconds);
+      } else {
+        await redis.set(key, value);
+      }
     } else {
       this.fallback.set(key, value);
     }
@@ -55,7 +59,7 @@ export class InviteStore {
   async nextCode(): Promise<string> {
     const raw = await this.read(COUNTER_KEY);
     const next = raw ? parseInt(raw, 10) + 1 : 1;
-    await this.write(COUNTER_KEY, String(next), DEFAULT_TTL);
+    await this.write(COUNTER_KEY, String(next));
     return `INV-${next}`;
   }
 
