@@ -18,7 +18,7 @@ const EXPAND_INTERVAL_MS = 15_000;
 const EXPAND_STEP = 100;
 const INITIAL_RATING = 1200;
 
-function computeWindowRadius(elapsedMs: number): number {
+export function computeWindowRadius(elapsedMs: number): number {
   const steps = Math.floor(elapsedMs / EXPAND_INTERVAL_MS);
   return BASE_WINDOW + steps * EXPAND_STEP;
 }
@@ -33,7 +33,13 @@ composer.command("rmatch", async (ctx) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sess = ctx.session as any;
   sess.mmActive = true;
-  sess.mmStartTime = Date.now();
+  const param = ctx.match?.trim();
+  const offsetMs = param ? parseInt(param, 10) * 1000 : 0;
+  if (!isNaN(offsetMs) && offsetMs >= 0) {
+    sess.mmStartTime = Date.now() - offsetMs;
+  } else {
+    sess.mmStartTime = Date.now();
+  }
   sess.mmRating = INITIAL_RATING;
 
   if (redis) {

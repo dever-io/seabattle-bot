@@ -65,5 +65,62 @@
         ]
       }
     ]
+  },
+  {
+    "name": "mm:wait after 15s elapsed expands window to ±200 with 1 expansion",
+    "steps": [
+      {
+        "send": { "text": "/rmatch 15" },
+        "expect": [{ "method": "sendMessage" }]
+      },
+      {
+        "send": { "callback": "mm:wait", "messageId": 1 },
+        "expect": [
+          { "method": "answerCallbackQuery" },
+          {
+            "method": "editMessageText",
+            "payload": { "text": "Still searching...\nRating: 1200\nRating window: ±200 (1 expansions)\nElapsed: ~15s" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "mm:wait after 30s elapsed expands window to ±300 with 2 expansions",
+    "steps": [
+      {
+        "send": { "text": "/rmatch 30" },
+        "expect": [{ "method": "sendMessage" }]
+      },
+      {
+        "send": { "callback": "mm:wait", "messageId": 1 },
+        "expect": [
+          { "method": "answerCallbackQuery" },
+          {
+            "method": "editMessageText",
+            "payload": { "text": "Still searching...\nRating: 1200\nRating window: ±300 (2 expansions)\nElapsed: ~30s" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/rmatch with 45s simulates deep expansion (±400, 3 expansions)",
+    "steps": [
+      {
+        "send": { "text": "/rmatch 45" },
+        "expect": [{ "method": "sendMessage" }]
+      },
+      {
+        "send": { "callback": "mm:wait", "messageId": 1 },
+        "expect": [
+          { "method": "answerCallbackQuery" },
+          {
+            "method": "editMessageText",
+            "payload": { "text": "Still searching...\nRating: 1200\nRating window: ±400 (3 expansions)\nElapsed: ~45s" }
+          }
+        ]
+      }
+    ]
   }
 ]
