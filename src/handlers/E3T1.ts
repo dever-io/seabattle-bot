@@ -31,7 +31,11 @@ async function showLeaderboard(ctx: Ctx, page: number) {
     text = lines.join("\n");
   }
 
-  await ctx.editMessageText(text, { reply_markup: controls });
+  try {
+    await ctx.editMessageText(text, { reply_markup: controls });
+  } catch {
+    await ctx.reply(text, { reply_markup: controls });
+  }
 }
 
 composer.callbackQuery("leaderboard:view", async (ctx) => {
