@@ -85,7 +85,8 @@ async function triggerEndgame(ctx: Ctx, winnerId: number, loserId: number): Prom
         `Wins: ${loserProfile.wins} | Losses: ${loserProfile.losses}`,
       { reply_markup: keyboard },
     );
-  } catch {
+  } catch (err) {
+    console.error("Failed to notify loser", loserId, err);
   }
 }
 
@@ -144,7 +145,9 @@ async function notifyOpponent(
   }
   try {
     await ctx.api.sendMessage(opponentId, text);
-  } catch {}
+  } catch (err) {
+    console.error("Failed to notify opponent", opponentId, err);
+  }
 }
 
 const composer = new Composer<Ctx>();
@@ -222,9 +225,12 @@ composer.callbackQuery(/^atk:(\d+):(\d+)$/, async (ctx) => {
         "Attack grid — tap a cell to fire!\nX = hit, O = miss, ~ = unknown",
         { reply_markup: gridKeyboard },
       );
-    } catch {}
+      await ctx.answerCallbackQuery({ text: "Miss!", show_alert: true });
+    } catch (err) {
+      console.error("Failed to update grid on miss", err);
+      await ctx.answerCallbackQuery({ text: "Grid update failed, but shot recorded.", show_alert: true });
+    }
 
-    await ctx.answerCallbackQuery({ text: "Miss!", show_alert: true });
     await notifyOpponent(ctx, state.opponentId, row, col, SHOT_RESULT_MISS);
   } else if (outcome.result === SHOT_RESULT_HIT) {
     attacks.push({ row, col, hit: true });
@@ -246,9 +252,12 @@ composer.callbackQuery(/^atk:(\d+):(\d+)$/, async (ctx) => {
         "Attack grid — tap a cell to fire!\nX = hit, O = miss, ~ = unknown",
         { reply_markup: gridKeyboard },
       );
-    } catch {}
+      await ctx.answerCallbackQuery({ text: "Hit!", show_alert: true });
+    } catch (err) {
+      console.error("Failed to update grid on hit", err);
+      await ctx.answerCallbackQuery({ text: "Grid update failed, but shot recorded.", show_alert: true });
+    }
 
-    await ctx.answerCallbackQuery({ text: "Hit!", show_alert: true });
     await notifyOpponent(ctx, state.opponentId, row, col, SHOT_RESULT_HIT);
   } else if (outcome.result === SHOT_RESULT_SUNK) {
     attacks.push({ row, col, hit: true });
@@ -263,6 +272,7 @@ composer.callbackQuery(/^atk:(\d+):(\d+)$/, async (ctx) => {
     );
 
     const gridKeyboard = buildGridKeyboard(attacks);
+    const shipName = outcome.ship?.type ?? "ship";
     try {
       await ctx.api.editMessageText(
         chatId,
@@ -270,10 +280,11 @@ composer.callbackQuery(/^atk:(\d+):(\d+)$/, async (ctx) => {
         "Attack grid — tap a cell to fire!\nX = hit, O = miss, ~ = unknown",
         { reply_markup: gridKeyboard },
       );
-    } catch {}
-
-    const shipName = outcome.ship?.type ?? "ship";
-    await ctx.answerCallbackQuery({ text: `Sunk the ${shipName}!`, show_alert: true });
+      await ctx.answerCallbackQuery({ text: `Sunk the ${shipName}!`, show_alert: true });
+    } catch (err) {
+      console.error("Failed to update grid on sunk", err);
+      await ctx.answerCallbackQuery({ text: "Grid update failed, but shot recorded.", show_alert: true });
+    }
     await notifyOpponent(ctx, state.opponentId, row, col, SHOT_RESULT_SUNK, shipName);
 
     if (checkWinCondition(outcome.board)) {
