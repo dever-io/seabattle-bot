@@ -85,3 +85,7 @@ export function matchmakingQueue(): MatchmakingQueue {
   }
   return _queue;
 }
+
+export function resetMatchmakingQueue(): void {
+  _queue = null;
+}

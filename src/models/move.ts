@@ -131,6 +131,12 @@ export class MemoryMoveStorage implements MoveStorage {
   private matchMoves = new Map<string, string[]>();
   private counter = 0;
 
+  reset(): void {
+    this.store.clear();
+    this.matchMoves.clear();
+    this.counter = 0;
+  }
+
   private nextId(): string {
     this.counter++;
     return String(this.counter);
@@ -208,3 +214,9 @@ export function resolveMoveStorage(env?: {
 }
 
 export const moveStorage: MoveStorage = resolveMoveStorage();
+
+export function resetMoveStorage(): void {
+  if (moveStorage instanceof MemoryMoveStorage) {
+    (moveStorage as MemoryMoveStorage).reset();
+  }
+}

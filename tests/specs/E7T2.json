@@ -87,13 +87,13 @@
           {
             "method": "sendMessage",
             "payload": {
-              "text": "Match #2 created.\nState: waiting\nPlayer A: Test (1)\nPlayer B: unknown (77)\nTurn: none"
+              "text": "Match #1 created.\nState: waiting\nPlayer A: Test (1)\nPlayer B: unknown (77)\nTurn: none"
             }
           }
         ]
       },
       {
-        "send": { "text": "/turnt 2" },
+        "send": { "text": "/turnt 1" },
         "expect": [
           {
             "method": "sendMessage",

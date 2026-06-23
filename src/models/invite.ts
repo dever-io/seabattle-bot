@@ -122,6 +122,12 @@ export class MemoryMatchInviteStorage implements MatchInviteStorage {
   private hostInvites = new Map<number, string[]>();
   private counter = 0;
 
+  reset(): void {
+    this.store.clear();
+    this.hostInvites.clear();
+    this.counter = 0;
+  }
+
   private nextCode(): string {
     this.counter++;
     return `INV-${this.counter}`;
@@ -200,3 +206,9 @@ export function resolveMatchInviteStorage(env?: {
 }
 
 export const matchInviteStorage: MatchInviteStorage = resolveMatchInviteStorage();
+
+export function resetMatchInviteStorage(): void {
+  if (matchInviteStorage instanceof MemoryMatchInviteStorage) {
+    (matchInviteStorage as MemoryMatchInviteStorage).reset();
+  }
+}

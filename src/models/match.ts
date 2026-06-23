@@ -169,6 +169,12 @@ export class MemoryMatchStorage implements MatchStorage {
   private playerMatches = new Map<number, string[]>();
   private counter = 0;
 
+  reset(): void {
+    this.store.clear();
+    this.playerMatches.clear();
+    this.counter = 0;
+  }
+
   private nextId(): string {
     this.counter++;
     return String(this.counter);
@@ -296,3 +302,9 @@ export function resolveMatchStorage(env?: {
 }
 
 export const matchStorage: MatchStorage = resolveMatchStorage();
+
+export function resetMatchStorage(): void {
+  if (matchStorage instanceof MemoryMatchStorage) {
+    (matchStorage as MemoryMatchStorage).reset();
+  }
+}
