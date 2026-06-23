@@ -1,0 +1,131 @@
+[
+  {
+    "name": "/placeship places a ship on the board with valid coordinates",
+    "steps": [
+      {
+        "send": { "text": "/placeship carrier 0 0 horizontal" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Ship placed: carrier (5 cells) horizontal\nPositions: (0,0) (0,1) (0,2) (0,3) (0,4)"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/placeship with out of bounds placement returns bounds error",
+    "steps": [
+      {
+        "send": { "text": "/placeship carrier 0 8 horizontal" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Ship placement out of bounds."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/placeship with overlapping ships returns overlap error",
+    "steps": [
+      {
+        "send": { "text": "/placeship carrier 0 0 horizontal" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Ship placed: carrier (5 cells) horizontal\nPositions: (0,0) (0,1) (0,2) (0,3) (0,4)"
+            }
+          }
+        ]
+      },
+      {
+        "send": { "text": "/placeship battleship 0 0 horizontal" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Ship overlaps with an existing ship."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/placeship duplicate ship type returns error",
+    "steps": [
+      {
+        "send": { "text": "/placeship carrier 0 0 horizontal" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Ship placed: carrier (5 cells) horizontal\nPositions: (0,0) (0,1) (0,2) (0,3) (0,4)"
+            }
+          }
+        ]
+      },
+      {
+        "send": { "text": "/placeship carrier 5 0 vertical" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Ship type already placed."
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/myboard shows empty board when no ships placed",
+    "steps": [
+      {
+        "send": { "text": "/myboard" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Board for player 1\nNo ships placed.\nHits: (none)\nMisses: (none)"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/myboard shows board with ships after placement",
+    "steps": [
+      {
+        "send": { "text": "/placeship carrier 0 0 horizontal" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Ship placed: carrier (5 cells) horizontal\nPositions: (0,0) (0,1) (0,2) (0,3) (0,4)"
+            }
+          }
+        ]
+      },
+      {
+        "send": { "text": "/myboard" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Board for player 1\ncarrier : (0,0) (0,1) (0,2) (0,3) (0,4)\nHits: (none)\nMisses: (none)"
+            }
+          }
+        ]
+      }
+    ]
+  }
+]
