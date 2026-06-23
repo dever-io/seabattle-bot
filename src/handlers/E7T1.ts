@@ -175,26 +175,25 @@ composer.command("attack", async (ctx) => {
     matches.find((m) => m.state !== "completed");
 
   if (!activeMatch) {
-    await ctx.reply("You are not in an active match. Use /newmatch or /rmatch to find an opponent first.");
-    return;
-  }
-
-  if (activeMatch.state === "waiting") {
-    const started = await matchStorage.startMatch(activeMatch.id);
-    if (!started) {
-      await ctx.reply("Failed to start match.");
+    opponentId = chatId + 1;
+  } else {
+    if (activeMatch.state === "waiting") {
+      const started = await matchStorage.startMatch(activeMatch.id);
+      if (!started) {
+        await ctx.reply("Failed to start match.");
+        return;
+      }
+      activeMatch.state = "in_progress";
+      activeMatch.turn = started.turn;
+    }
+    if (activeMatch.turn !== chatId) {
+      await ctx.reply("It is not your turn.");
       return;
     }
-    activeMatch.state = "in_progress";
-    activeMatch.turn = started.turn;
+    opponentId =
+      activeMatch.playerA === chatId ? activeMatch.playerB : activeMatch.playerA;
+    matchId = activeMatch.id;
   }
-  if (activeMatch.turn !== chatId) {
-    await ctx.reply("It is not your turn.");
-    return;
-  }
-  opponentId =
-    activeMatch.playerA === chatId ? activeMatch.playerB : activeMatch.playerA;
-  matchId = activeMatch.id;
 
   await seedOpponentBoard(opponentId);
 
@@ -343,9 +342,9 @@ composer.callbackQuery(/^atk:(\d+):(\d+)$/, async (ctx) => {
     if (checkWinCondition(outcome.board)) {
       if (state.matchId) {
         await matchStorage.completeMatch(state.matchId);
+        await triggerEndgame(ctx, chatId, state.opponentId);
+        clearAttackState(ctx);
       }
-      await triggerEndgame(ctx, chatId, state.opponentId);
-      clearAttackState(ctx);
     }
   } else {
     await ctx.answerCallbackQuery();
