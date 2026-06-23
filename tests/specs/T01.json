@@ -1,0 +1,13 @@
+[
+  {
+    "name": "/ping replies with pong",
+    "steps": [
+      {
+        "send": { "text": "/ping" },
+        "expect": [
+          { "method": "sendMessage", "payload": { "text": "Pong! Bot skeleton is operational." } }
+        ]
+      }
+    ]
+  }
+]
