@@ -6,6 +6,9 @@ interface RatingQueueRedis {
   zadd(key: string, score: number, member: string): Promise<number>;
   zrem(key: string, ...members: string[]): Promise<number>;
   zrangebyscore(key: string, min: number, max: number): Promise<string[]>;
+  set(key: string, value: string): Promise<unknown>;
+  get(key: string): Promise<string | null>;
+  del(key: string): Promise<unknown>;
 }
 
 const redis = getRedisClient() as unknown as RatingQueueRedis | null;
@@ -13,6 +16,7 @@ const redis = getRedisClient() as unknown as RatingQueueRedis | null;
 const composer = new Composer<Ctx>();
 
 const QUEUE_ZSET = "matchmaking:rating:queue";
+const CHAT_KEY_PREFIX = "mm:chat:";
 const BASE_WINDOW = 100;
 const EXPAND_INTERVAL_MS = 15_000;
 const EXPAND_STEP = 100;
@@ -39,6 +43,7 @@ composer.command("rmatch", async (ctx) => {
   if (redis) {
     try {
       await redis.zadd(QUEUE_ZSET, sess.mmRating, userId.toString());
+      await redis.set(CHAT_KEY_PREFIX + userId.toString(), chatId.toString());
     } catch {
       // queue push failed; user can still see the search UI
     }
@@ -85,7 +90,17 @@ composer.callbackQuery("mm:wait", async (ctx) => {
       const opponentId = candidates.find((id) => id !== userId.toString());
       if (opponentId) {
         await redis.zrem(QUEUE_ZSET, userId.toString(), opponentId);
+        await redis.del(CHAT_KEY_PREFIX + userId.toString());
+        await redis.del(CHAT_KEY_PREFIX + opponentId);
         sess.mmActive = false;
+
+        const opponentChatId = await redis.get(CHAT_KEY_PREFIX + opponentId);
+        if (opponentChatId) {
+          await ctx.api.sendMessage(
+            parseInt(opponentChatId, 10),
+            `Match found!\nOpponent: ${userId}\nUse /newmatch ${userId} to start a game`,
+          ).catch(() => {});
+        }
 
         await ctx.editMessageText(
           `Match found!\nYour rating: ${rating}\nOpponent: ${opponentId}\nRating window used: ±${windowRadius}`,
@@ -126,6 +141,7 @@ composer.callbackQuery("mm:friend", async (ctx) => {
   if (redis && userId) {
     try {
       await redis.zrem(QUEUE_ZSET, userId.toString());
+      await redis.del(CHAT_KEY_PREFIX + userId.toString());
     } catch {
       // removal failed; user is no longer active anyway
     }
