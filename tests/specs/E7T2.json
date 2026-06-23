@@ -1,0 +1,115 @@
+[
+  {
+    "name": "/turnt without match_id shows usage",
+    "steps": [
+      {
+        "send": { "text": "/turnt" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": { "text": "Usage: /turnt <match_id>" }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/turnt with non-existent match shows not found",
+    "steps": [
+      {
+        "send": { "text": "/turnt 999" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": { "text": "Match not found." }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "tapping Your Turn button shows help alert",
+    "steps": [
+      {
+        "send": { "callback": "turnt:match:1" },
+        "expect": [
+          {
+            "method": "answerCallbackQuery",
+            "payload": {
+              "text": "Use /fire <row> <col> to attack!",
+              "show_alert": true
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "full flow: fire pass turn then /turnt notifies opponent with Your Turn button",
+    "steps": [
+      {
+        "send": { "text": "/newmatch 88" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Match #1 created.\nState: waiting\nPlayer A: Test (1)\nPlayer B: unknown (88)\nTurn: none"
+            }
+          }
+        ]
+      },
+      {
+        "send": { "text": "/fire 0 0" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": { "text": "Move #1: miss at (0,0). Next player's turn." }
+          }
+        ]
+      },
+      {
+        "send": { "text": "/turnt 1", "userId": 88 },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Your opponent has made a move. It's your turn! Match #1",
+              "reply_markup": {
+                "inline_keyboard": [[{ "text": "Your Turn", "callback_data": "turnt:match:1" }]]
+              }
+            }
+          },
+          {
+            "method": "sendMessage",
+            "payload": { "text": "Turn passed. It is now player 1's turn." }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "create match and /turnt while waiting shows not in progress",
+    "steps": [
+      {
+        "send": { "text": "/newmatch 77" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Match #2 created.\nState: waiting\nPlayer A: Test (1)\nPlayer B: unknown (77)\nTurn: none"
+            }
+          }
+        ]
+      },
+      {
+        "send": { "text": "/turnt 2" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": { "text": "The match is not in progress." }
+          }
+        ]
+      }
+    ]
+  }
+]
