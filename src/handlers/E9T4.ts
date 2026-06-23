@@ -27,25 +27,37 @@ composer.command("fire", async (ctx) => {
   const args = ctx.message?.text?.trim().split(/\s+/) ?? [];
   const userId = ctx.from.id;
 
+  if (args.length < 2) {
+    await ctx.reply("Usage: /fire <row> <col>");
+    return;
+  }
+
+  let row: number;
+  let col: number;
+  let match: Match;
+
   const matches = await matchStorage.findByPlayer(userId);
   const active = matches.filter((m) => m.state !== "completed");
+
   if (active.length === 0) {
+    row = parseInt(args[1], 10);
+    col = parseInt(args[2] ?? "", 10);
+    if (isNaN(row) || row < 0 || isNaN(col) || col < 0) {
+      await ctx.reply("Row and col must be non-negative integers.");
+      return;
+    }
     await ctx.reply("You have no active match.");
     return;
   }
 
-  let match: Match;
-  let row: number;
-  let col: number;
-
   if (active.length === 1) {
-    if (args.length < 3) {
-      await ctx.reply("Usage: /fire <row> <col>");
+    row = parseInt(args[1], 10);
+    col = parseInt(args[2] ?? "", 10);
+    if (isNaN(row) || row < 0 || isNaN(col) || col < 0) {
+      await ctx.reply("Row and col must be non-negative integers.");
       return;
     }
     match = active[0];
-    row = parseInt(args[1], 10);
-    col = parseInt(args[2], 10);
   } else {
     if (args.length >= 4) {
       const matchId = args[1];
@@ -62,6 +74,10 @@ composer.command("fire", async (ctx) => {
       match = found;
       row = parseInt(args[2], 10);
       col = parseInt(args[3], 10);
+      if (isNaN(row) || row < 0 || isNaN(col) || col < 0) {
+        await ctx.reply("Row and col must be non-negative integers.");
+        return;
+      }
     } else if (args.length >= 3) {
       await ctx.reply(
         "You have multiple active matches. Specify the match ID:\n\n" +
@@ -77,11 +93,6 @@ composer.command("fire", async (ctx) => {
       );
       return;
     }
-  }
-
-  if (isNaN(row) || row < 0 || isNaN(col) || col < 0) {
-    await ctx.reply("Row and col must be non-negative integers.");
-    return;
   }
 
   if (match.state === "waiting") {
