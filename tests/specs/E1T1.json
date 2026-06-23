@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Quick Match button initiates matchmaking",
+    "steps": [
+      {
+        "send": { "callback": "matchmaking:quick", "messageId": 1 },
+        "expect": [
+          { "method": "answerCallbackQuery" },
+          { "method": "editMessageText", "payload": { "text": "Looking for a match..." } }
+        ]
+      }
+    ]
+  }
+]
