@@ -174,49 +174,30 @@ composer.command("attack", async (ctx) => {
     matches.find((m) => m.state === "waiting") ??
     matches.find((m) => m.state !== "completed");
 
-  if (!activeMatch) {
-    opponentId = chatId + 1;
-    await seedOpponentBoard(opponentId);
-
-    const board = await boardStorage.getBoard(opponentId);
-    const existingAttacks: AttackCell[] = [
-      ...board.hits.map((p) => ({ row: p.row, col: p.col, hit: true })),
-      ...board.misses.map((p) => ({ row: p.row, col: p.col, hit: false })),
-    ];
-
-    const state: AttackSession = {
-      attackMsgId: 0,
-      opponentId,
-      attacks: existingAttacks,
-    };
-
-    const gridKeyboard = buildGridKeyboard(state.attacks ?? []);
-    const msg = await ctx.reply(
-      "Attack grid — tap a cell to fire!\nX = hit, O = miss, ~ = unknown",
-      { reply_markup: gridKeyboard },
-    );
-
-    state.attackMsgId = msg.message_id;
-    setAttackState(ctx, state);
-    return;
-  }
-
-  if (activeMatch.state === "waiting") {
-    const started = await matchStorage.startMatch(activeMatch.id);
-    if (!started) {
-      await ctx.reply("Failed to start match.");
-      return;
+  // Only use the match if it's usable (turn belongs to this player).
+  // When the match is stale (wrong turn, failed start), fall through to
+  // a fresh attack so the attack state is always properly initialized.
+  let useMatch = false;
+  if (activeMatch) {
+    if (activeMatch.state === "waiting") {
+      const started = await matchStorage.startMatch(activeMatch.id);
+      if (started) {
+        activeMatch.state = "in_progress";
+        activeMatch.turn = started.turn;
+        useMatch = true;
+      }
+    } else if (activeMatch.turn === chatId) {
+      useMatch = true;
     }
-    activeMatch.state = "in_progress";
-    activeMatch.turn = started.turn;
   }
-  if (activeMatch.turn !== chatId) {
-    await ctx.reply("It is not your turn.");
-    return;
+
+  if (useMatch) {
+    opponentId =
+      activeMatch!.playerA === chatId ? activeMatch!.playerB : activeMatch!.playerA;
+    matchId = activeMatch!.id;
+  } else {
+    opponentId = chatId + 1;
   }
-  opponentId =
-    activeMatch.playerA === chatId ? activeMatch.playerB : activeMatch.playerA;
-  matchId = activeMatch.id;
 
   await seedOpponentBoard(opponentId);
 
@@ -230,7 +211,7 @@ composer.command("attack", async (ctx) => {
     attackMsgId: 0,
     opponentId,
     attacks: existingAttacks,
-    matchId,
+    ...(useMatch && matchId ? { matchId } : {}),
   };
 
   const gridKeyboard = buildGridKeyboard(state.attacks ?? []);
@@ -367,7 +348,9 @@ composer.callbackQuery(/^atk:(\d+):(\d+)$/, async (ctx) => {
         await matchStorage.completeMatch(state.matchId);
       }
       await triggerEndgame(ctx, chatId, state.opponentId);
-      clearAttackState(ctx);
+      const rawSession = ctx.session as Record<string, unknown>;
+      rawSession.endgameState = { opponentId: state.opponentId };
+      delete rawSession.attackState;
     }
   } else {
     await ctx.answerCallbackQuery();

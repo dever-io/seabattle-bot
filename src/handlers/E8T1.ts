@@ -108,6 +108,16 @@ const composer = new Composer<Ctx>();
 
 composer.command("endgame", async (ctx) => {
   const chatId = ctx.chat!.id;
+  const rawSession = ctx.session as Record<string, unknown>;
+
+  const endgameState = rawSession.endgameState as { opponentId?: number } | undefined;
+  if (endgameState?.opponentId) {
+    delete rawSession.endgameState;
+    const board = await boardStorage.getBoard(endgameState.opponentId);
+    await resolveEndgame(ctx, chatId, endgameState.opponentId, board, false);
+    return;
+  }
+
   const attackSession = getAttackSession(ctx);
 
   if (attackSession?.opponentId) {
