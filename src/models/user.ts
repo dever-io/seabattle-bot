@@ -107,6 +107,10 @@ export class RedisUserStorage implements UserStorage {
 export class MemoryUserStorage implements UserStorage {
   private store = new Map<number, User>();
 
+  reset(): void {
+    this.store.clear();
+  }
+
   async create(user: User): Promise<User> {
     const existing = this.store.get(user.telegram_id);
     if (existing) return existing;
@@ -163,4 +167,10 @@ export function resolveUserStorage(env?: {
 }
 
 export const userStorage: UserStorage = resolveUserStorage();
+
+export function resetUserStorage(): void {
+  if (userStorage instanceof MemoryUserStorage) {
+    (userStorage as MemoryUserStorage).reset();
+  }
+}
 export { INITIAL_RATING };

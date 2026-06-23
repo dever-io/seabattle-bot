@@ -105,3 +105,7 @@ export function profileStore(): ProfileStore {
   }
   return _store;
 }
+
+export function resetProfileStore(): void {
+  _store = null;
+}

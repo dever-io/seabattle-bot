@@ -239,6 +239,11 @@ export class MemoryBoardStorage implements BoardStorage {
   private store = new Map<number, Board>();
   private counter = 0;
 
+  reset(): void {
+    this.store.clear();
+    this.counter = 0;
+  }
+
   private load(owner: number): Board {
     return this.store.get(owner) ?? emptyBoard(owner);
   }
@@ -352,3 +357,9 @@ export function resolveBoardStorage(env?: {
 }
 
 export const boardStorage: BoardStorage = resolveBoardStorage();
+
+export function resetBoardStorage(): void {
+  if (boardStorage instanceof MemoryBoardStorage) {
+    (boardStorage as MemoryBoardStorage).reset();
+  }
+}
