@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Matchmaking replies with error when Redis is unavailable",
+    "steps": [
+      {
+        "send": { "callback": "matchmaking:quick", "messageId": 1 },
+        "expect": [
+          { "method": "answerCallbackQuery" },
+          { "method": "editMessageText", "payload": { "text": "Matchmaking is temporarily unavailable" } }
+        ]
+      }
+    ]
+  }
+]

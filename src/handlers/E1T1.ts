@@ -8,13 +8,15 @@ composer.callbackQuery("matchmaking:quick", async (ctx) => {
   await ctx.answerCallbackQuery();
 
   const chatId = ctx.chat?.id;
-  if (chatId) {
-    const redis = getRedisClient();
-    if (redis) {
-      await redis.sadd("matchmaking:queue", chatId.toString());
-    }
+  if (!chatId) return;
+
+  const redis = getRedisClient();
+  if (!redis) {
+    await ctx.editMessageText("Matchmaking is temporarily unavailable");
+    return;
   }
 
+  await redis.sadd("matchmaking:queue", chatId.toString());
   await ctx.editMessageText("Looking for a match...");
 });
 
