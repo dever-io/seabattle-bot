@@ -1,0 +1,149 @@
+[
+  {
+    "name": "/place_ships shows grid and controls",
+    "steps": [
+      {
+        "send": { "text": "/place_ships" },
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Place your ships (0/5 placed)\nRemaining: Carrier, Battleship, Cruiser, Submarine, Destroyer\nSelected: Carrier (5 cells)\nOrientation: Horizontal\n\nTap a cell on the grid below to place the selected ship.",
+              "reply_markup": {
+                "inline_keyboard": [
+                  [
+                    { "text": ">Carrier (5)", "callback_data": "ships:t:Carrier" },
+                    { "text": "Battleship (4)", "callback_data": "ships:t:Battleship" },
+                    { "text": "Cruiser (3)", "callback_data": "ships:t:Cruiser" },
+                    { "text": "Submarine (3)", "callback_data": "ships:t:Submarine" },
+                    { "text": "Destroyer (2)", "callback_data": "ships:t:Destroyer" }
+                  ],
+                  [
+                    { "text": "Rotation: Horizontal", "callback_data": "ships:rot" }
+                  ],
+                  [
+                    { "text": "Reset", "callback_data": "ships:reset" }
+                  ]
+                ]
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "ship selection updates controls",
+    "steps": [
+      {
+        "send": { "text": "/place_ships" },
+        "expect": [
+          { "method": "sendMessage" },
+          { "method": "sendMessage" }
+        ]
+      },
+      {
+        "send": { "callback": "ships:t:Battleship" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery" }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "rotation toggle switches orientation",
+    "steps": [
+      {
+        "send": { "text": "/place_ships" },
+        "expect": [
+          { "method": "sendMessage" },
+          { "method": "sendMessage" }
+        ]
+      },
+      {
+        "send": { "callback": "ships:rot" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery" }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "placing a ship on grid cells works",
+    "steps": [
+      {
+        "send": { "text": "/place_ships" },
+        "expect": [
+          { "method": "sendMessage" },
+          { "method": "sendMessage" }
+        ]
+      },
+      {
+        "send": { "callback": "ships:c:0:0" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery" }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "reset clears all placements",
+    "steps": [
+      {
+        "send": { "text": "/place_ships" },
+        "expect": [
+          { "method": "sendMessage" },
+          { "method": "sendMessage" }
+        ]
+      },
+      {
+        "send": { "callback": "ships:c:0:0" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery" }
+        ]
+      },
+      {
+        "send": { "callback": "ships:reset" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery" }
+        ]
+      }
+    ]
+  },
+  {
+    "name": "cannot place overlapping ships",
+    "steps": [
+      {
+        "send": { "text": "/place_ships" },
+        "expect": [
+          { "method": "sendMessage" },
+          { "method": "sendMessage" }
+        ]
+      },
+      {
+        "send": { "callback": "ships:c:0:0" },
+        "expect": [
+          { "method": "editMessageText" },
+          { "method": "editMessageText" },
+          { "method": "answerCallbackQuery" }
+        ]
+      },
+      {
+        "send": { "callback": "ships:c:0:0" },
+        "expect": [
+          { "method": "answerCallbackQuery", "payload": { "text": "Cannot place ship there.", "show_alert": true } }
+        ]
+      }
+    ]
+  }
+]
