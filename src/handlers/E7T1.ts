@@ -9,7 +9,7 @@ import {
   SHOT_RESULT_SUNK,
 } from "../models/board.js";
 import { type ShipType, type ShipOrientation } from "../models/ship.js";
-import { checkWinCondition } from "../models/move.js";
+import { moveStorage, checkWinCondition } from "../models/move.js";
 import { profileStore } from "../storage/profile-store.js";
 
 interface AttackCell {
@@ -201,6 +201,13 @@ composer.callbackQuery(/^atk:(\d+):(\d+)$/, async (ctx) => {
     state.attacks = attacks;
     setAttackState(ctx, state);
 
+    await moveStorage.create(
+      `attack:${chatId}:${state.opponentId}`,
+      chatId,
+      outcome.position,
+      outcome.result,
+    );
+
     const gridKeyboard = buildGridKeyboard(attacks);
     try {
       await ctx.api.editMessageText(
@@ -218,6 +225,13 @@ composer.callbackQuery(/^atk:(\d+):(\d+)$/, async (ctx) => {
     state.attacks = attacks;
     setAttackState(ctx, state);
 
+    await moveStorage.create(
+      `attack:${chatId}:${state.opponentId}`,
+      chatId,
+      outcome.position,
+      outcome.result,
+    );
+
     const gridKeyboard = buildGridKeyboard(attacks);
     try {
       await ctx.api.editMessageText(
@@ -234,6 +248,13 @@ composer.callbackQuery(/^atk:(\d+):(\d+)$/, async (ctx) => {
     attacks.push({ row, col, hit: true });
     state.attacks = attacks;
     setAttackState(ctx, state);
+
+    await moveStorage.create(
+      `attack:${chatId}:${state.opponentId}`,
+      chatId,
+      outcome.position,
+      outcome.result,
+    );
 
     const gridKeyboard = buildGridKeyboard(attacks);
     try {
